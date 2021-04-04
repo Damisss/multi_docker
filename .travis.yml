@@ -1,0 +1,21 @@
+sudo: requied
+services:
+  - docker:
+before_install:
+  - docker build -t damiss/react-test -f ./client/Dockerfile.dev ./client
+script:
+  - docker run -e CI=true damiss/react-test npm test
+  #docker run damiss/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t damiss/multi-client ./client
+  - docker build -t damiss/multi-server ./server
+  - docker build -t damiss/multi-nginx ./nginx
+  - docker build -t damiss/multi-worker ./worker
+  #login to the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #push all created image to docker hub
+  - docker push damiss/multi-client
+  - docker push damiss/multi-server
+  - docker push damiss/multi-nginx
+  - docker push damiss/multi-worker
